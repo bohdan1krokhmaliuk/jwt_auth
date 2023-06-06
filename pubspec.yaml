@@ -7,6 +7,7 @@ environment:
   sdk: ">=3.0.0 <3.1.0"
 
 dependencies:
+  collection: ^1.17.2
   crypto: ^3.0.3
   dart_frog: ^0.3.0
   jaguar_jwt: ^3.0.0
@@ -15,4 +16,3 @@ dev_dependencies:
   mocktail: ^0.3.0
   test: ^1.19.2
   very_good_analysis: ^4.0.0
-  

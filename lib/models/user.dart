@@ -1,13 +1,20 @@
+class UserDetails {
+  const UserDetails(this.id);
+  const UserDetails.empty() : id = null;
+
+  final int? id;
+}
+
 class User {
-  User({
+  const User({
     required this.id,
     required this.email,
-    required this.authHash,
+    required this.passwordHash,
     required this.createdAt,
   });
 
   final int id;
   final String email;
-  final String authHash;
   final DateTime createdAt;
+  final String passwordHash;
 }

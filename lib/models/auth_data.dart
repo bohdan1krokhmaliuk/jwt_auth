@@ -1,28 +1,22 @@
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 
-class AuthData {
-  AuthData.access(this._claim)
-      : canAccess = true,
-        canRefresh = false;
+abstract class ClaimDetails {
+  const ClaimDetails(this.claim);
+  final JwtClaim claim;
+}
 
-  AuthData.refresh(this._claim)
-      : canAccess = false,
-        canRefresh = true;
+sealed class AuthData {
+  const AuthData();
+}
 
-  AuthData.none()
-      : _claim = null,
-        canAccess = false,
-        canRefresh = false;
+class AccessAuth extends ClaimDetails implements AuthData {
+  const AccessAuth(super.subject);
+}
 
-  final bool canRefresh;
-  final bool canAccess;
-  final JwtClaim? _claim;
+class RefreshAuth extends ClaimDetails implements AuthData {
+  const RefreshAuth(super.subject);
+}
 
-  JwtClaim get claim {
-    assert(
-      canRefresh || canAccess,
-      'JWT claim only accessable if refresh or access possible',
-    );
-    return _claim!;
-  }
+class NoneAuth implements AuthData {
+  const NoneAuth();
 }

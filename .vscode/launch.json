@@ -5,10 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "jwt_auth",
-            "request": "launch",
             "type": "dart",
-            "program": ".dart_frog/server.dart"
+            "request": "launch",
+            "name": "jwt_auth_development",
+            // TODO: update when https://github.com/VeryGoodOpenSource/dart_frog/pull/599
+            // will be included in stable version of dart_frog
+            // "customTool": "dart_frog",
+            // "args": ["dev","--dart-vm-service-port 8181"],
+            "program": ".dart_frog/server.dart",
+            "env": {
+                "JWT_ISSUER": "my_company_example",
+                "JWT_ACCESS_SECRET": "<here-goes-your-access-secret>",
+                "JWT_REFRESH_SECRET": "<here-goes-your-refresh-secret>"
+              }
         }
     ]
 }

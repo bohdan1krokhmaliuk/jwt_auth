@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 /// Class that emulates database service
 class DatabaseService {
   DatabaseService._();
@@ -27,7 +29,7 @@ class DatabaseService {
   /// Emulates get single object from db (actually sames into ram)
   Future<T?> get<T>(WhereQuery<T> where) async {
     try {
-      return _getTable<T>().firstWhere(where);
+      return _getTable<T>().firstWhereOrNull(where);
     } catch (e) {
       return null;
     }

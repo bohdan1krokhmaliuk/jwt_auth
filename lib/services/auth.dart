@@ -5,47 +5,94 @@ import 'package:jaguar_jwt/jaguar_jwt.dart';
 import 'package:jwt_auth/config.dart';
 import 'package:jwt_auth/models/auth_data.dart';
 
-interface class Auth {
-  /// Returns (access, refresh) token
-  static (String, String) issueJwtPair(
-    int userId, {
+typedef JWTPair = ({String access, String refresh});
+
+// TODO: move to some kind of UserService
+String hashPassword(String password) {
+  final bytes = utf8.encode(password);
+  final hash = sha256.convert(bytes);
+  return hash.toString();
+}
+
+abstract class Authenticator {
+  factory Authenticator.instance() => _Auth.instance();
+
+  JWTPair issueJwtPair(
+    String subject, {
+    Duration accessAge = const Duration(hours: 1),
+    Duration refreshAge = const Duration(days: 14),
+  });
+}
+
+abstract class Authorizator {
+  factory Authorizator.instance() => _Auth.instance();
+
+  AuthData authorize(String jwt);
+}
+
+class _Auth implements Authenticator, Authorizator {
+  _Auth(this.config);
+  factory _Auth.instance() {
+    if (_instance case final instance?) return instance;
+    final auth = _Auth(Config.fromEnvironment());
+    _instance = auth;
+    return auth;
+  }
+
+  static _Auth? _instance;
+
+  final Config config;
+
+  @override
+  JWTPair issueJwtPair(
+    String subject, {
     Duration accessAge = const Duration(hours: 1),
     Duration refreshAge = const Duration(days: 14),
   }) {
-    final accessSet = JwtClaim(
-      subject: '$userId',
+    final now = DateTime.now();
+    final access = JwtClaim(
+      issuedAt: now,
+      subject: subject,
       maxAge: accessAge,
-      issuer: 'my_company_name',
-      otherClaims: {'token_type': 'access'},
+      defaultIatExp: false,
+      issuer: config.issuer,
     );
-    final refreshSet = JwtClaim(
-      subject: '$userId',
+    final refresh = JwtClaim(
+      issuedAt: now,
+      subject: subject,
       maxAge: refreshAge,
-      issuer: 'my_company_name',
-      otherClaims: {'token_type': 'refresh'},
+      defaultIatExp: false,
+      issuer: config.issuer,
     );
 
     return (
-      issueJwtHS256(accessSet, Config.jwtSecret),
-      issueJwtHS256(refreshSet, Config.jwtSecret)
+      access: issueJwtHS256(access, config.accessSecret),
+      refresh: issueJwtHS256(refresh, config.refreshSecret)
     );
   }
 
-  static AuthData buildAuthData(String jwt) {
-    final claim = verifyJwtHS256Signature(jwt, Config.jwtSecret);
-    switch (claim['token_type']) {
-      case 'access':
-        return AuthData.access(claim);
-      case 'refresh':
-        return AuthData.refresh(claim);
-      default:
-        return AuthData.none();
-    }
-  }
+  @override
+  AuthData authorize(String header) {
+    try {
+      final [type, token] = header.split(' ');
+      final typeLowercase = type.toLowerCase();
 
-  static String hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final hash = sha256.convert(bytes);
-    return hash.toString();
+      final secret = switch (typeLowercase) {
+        'bearer' => config.accessSecret,
+        'refresh' => config.refreshSecret,
+        _ => throw Exception('token_type_not_defined'),
+      };
+
+      final claim = verifyJwtHS256Signature(token, secret, defaultIatExp: false)
+        ..validate(issuer: config.issuer);
+
+      return switch (typeLowercase) {
+        'bearer' => AccessAuth(claim),
+        'refresh' => RefreshAuth(claim),
+        _ => const NoneAuth(),
+      } as AuthData;
+    } catch (e) {
+      return const NoneAuth();
+    }
   }
 }

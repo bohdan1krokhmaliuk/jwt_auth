@@ -39,12 +39,14 @@ Future<Response> onRequest(RequestContext context) async {
         email: email,
         createdAt: now,
         id: now.hashCode,
-        authHash: Auth.hashPassword(password),
+        passwordHash: hashPassword(password),
       );
 
       await db.insert(user);
-      final (access, refresh) = Auth.issueJwtPair(user.id);
-      return Response.json(body: {'access': access, 'refresh': refresh});
+      final jwtPair = context.read<Authenticator>().issueJwtPair('${user.id}');
+      return Response.json(
+        body: {'access': jwtPair.access, 'refresh': jwtPair.refresh},
+      );
     default:
       return Response(statusCode: HttpStatus.methodNotAllowed);
   }

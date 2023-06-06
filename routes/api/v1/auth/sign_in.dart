@@ -26,18 +26,20 @@ Future<Response> onRequest(RequestContext context) async {
       }
 
       // Check for existing user
-      final authHash = Auth.hashPassword(password);
+      final passwordHash = hashPassword(password);
       final db = context.read<DatabaseService>();
       final user = await db.get<User>((user) => user.email == email);
-      if (user == null || user.authHash != authHash) {
+      if (user == null || user.passwordHash != passwordHash) {
         return Response.json(
-          statusCode: HttpStatus.unauthorized,
+          statusCode: HttpStatus.forbidden,
           body: {'error': 'Invalid email or password'},
         );
       }
 
-      final (access, refresh) = Auth.issueJwtPair(user.id);
-      return Response.json(body: {'access': access, 'refresh': refresh});
+      final jwtPair = context.read<Authenticator>().issueJwtPair('${user.id}');
+      return Response.json(
+        body: {'access': jwtPair.access, 'refresh': jwtPair.refresh},
+      );
     default:
       return Response(statusCode: HttpStatus.methodNotAllowed);
   }
