@@ -16,8 +16,9 @@
             "env": {
                 "JWT_ISSUER": "my_company_example",
                 "JWT_ACCESS_SECRET": "<here-goes-your-access-secret>",
-                "JWT_REFRESH_SECRET": "<here-goes-your-refresh-secret>"
-              }
+                "JWT_REFRESH_SECRET": "<here-goes-your-refresh-secret>",
+                "DATABASE_URL": "postgresql://postgres:12345678@localhost:5432/postgres?schema=public"
+            }
         }
     ]
 }

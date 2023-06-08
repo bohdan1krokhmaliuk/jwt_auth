@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:jwt_auth/models/user.dart';
+import 'package:db/db.dart';
 import 'package:jwt_auth/services/auth.dart';
-import 'package:jwt_auth/services/db.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   switch (context.request.method) {
@@ -26,27 +25,21 @@ Future<Response> onRequest(RequestContext context) async {
         return Response(statusCode: HttpStatus.unprocessableEntity);
       }
 
-      // Check for existing user
-      final db = context.read<DatabaseService>();
-      final existingUser = await db.get<User>((user) => user.email == email);
-      if (existingUser != null) {
+      // User creation
+      final db = context.read<DbClient>();
+      try {
+        final user = await db.user.create(
+          data: UserCreateInput(email: email, password: hashPassword(password)),
+        );
+        final jwtPair =
+            context.read<Authenticator>().issueJwtPair('${user.id}');
+        return Response.json(
+          body: {'access': jwtPair.access, 'refresh': jwtPair.refresh},
+        );
+      } catch (e) {
         return Response(statusCode: HttpStatus.conflict);
       }
 
-      // User creation
-      final now = DateTime.now();
-      final user = User(
-        email: email,
-        createdAt: now,
-        id: now.hashCode,
-        passwordHash: hashPassword(password),
-      );
-
-      await db.insert(user);
-      final jwtPair = context.read<Authenticator>().issueJwtPair('${user.id}');
-      return Response.json(
-        body: {'access': jwtPair.access, 'refresh': jwtPair.refresh},
-      );
     default:
       return Response(statusCode: HttpStatus.methodNotAllowed);
   }

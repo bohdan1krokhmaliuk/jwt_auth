@@ -1,6 +1,5 @@
 import 'package:dart_frog/dart_frog.dart';
 import 'package:jwt_auth/models/auth_data.dart';
-import 'package:jwt_auth/models/user.dart';
 import 'package:jwt_auth/services/auth.dart';
 
 Middleware userDetailsProvider() {

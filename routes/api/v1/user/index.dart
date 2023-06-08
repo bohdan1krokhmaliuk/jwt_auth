@@ -1,16 +1,17 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:jwt_auth/models/user.dart';
-import 'package:jwt_auth/services/db.dart';
+import 'package:db/db.dart';
+import 'package:jwt_auth/models/auth_data.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   final details = context.read<UserDetails>();
   if (details.id == null) return Response(statusCode: HttpStatus.forbidden);
 
   // Check for existing user
-  final db = context.read<DatabaseService>();
-  final user = await db.get<User>((user) => user.id == details.id);
+  final db = context.read<DbClient>();
+  final user =
+      await db.user.findUnique(where: UserWhereUniqueInput(id: details.id));
 
   if (user == null) {
     return Response.json(
@@ -19,11 +20,5 @@ Future<Response> onRequest(RequestContext context) async {
     );
   }
 
-  return Response.json(
-    body: {
-      'id': user.id,
-      'email': user.email,
-      'created_at': user.createdAt.toIso8601String(),
-    },
-  );
+  return Response.json(body: user.toJson()..remove('password'));
 }

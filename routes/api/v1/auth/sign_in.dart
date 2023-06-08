@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:jwt_auth/models/user.dart';
+import 'package:db/db.dart';
 import 'package:jwt_auth/services/auth.dart';
-import 'package:jwt_auth/services/db.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   switch (context.request.method) {
@@ -27,9 +26,11 @@ Future<Response> onRequest(RequestContext context) async {
 
       // Check for existing user
       final passwordHash = hashPassword(password);
-      final db = context.read<DatabaseService>();
-      final user = await db.get<User>((user) => user.email == email);
-      if (user == null || user.passwordHash != passwordHash) {
+      final db = context.read<DbClient>();
+      final user = await db.user.findUnique(
+        where: UserWhereUniqueInput(email: email),
+      );
+      if (user == null || user.password != passwordHash) {
         return Response.json(
           statusCode: HttpStatus.forbidden,
           body: {'error': 'Invalid email or password'},

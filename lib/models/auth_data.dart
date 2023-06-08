@@ -20,3 +20,10 @@ class RefreshAuth extends ClaimDetails implements AuthData {
 class NoneAuth implements AuthData {
   const NoneAuth();
 }
+
+class UserDetails {
+  const UserDetails(this.id);
+  const UserDetails.empty() : id = null;
+
+  final int? id;
+}
