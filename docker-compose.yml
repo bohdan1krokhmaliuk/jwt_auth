@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+
+  api:
+    restart: always
+    build: ./
+    ports:
+      - 8080:8080
+    environment:
+      JWT_ISSUER: my_company_name
+      JWT_ACCESS_SECRET: here-goes-your-access-secret
+      JWT_REFRESH_SECRET: here-goes-your-refresh-secret
+      DATABASE_URL: postgresql://postgres:12345678@db:5432/jwt_auth?schema=public
+
+  db:
+    restart: always
+    image: postgres:15.3
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: jwt_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+
+volumes:
+  db_data:
